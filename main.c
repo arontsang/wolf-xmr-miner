@@ -31,8 +31,7 @@
 #include "minerlog.h"
 #include "minernet.h"
 #include "stratum.h"
-#include "miner.h"
-#include "ocl.h"
+//#include "miner.h"
 
 #define STRATUM_TIMEOUT_SECONDS			120
 
@@ -59,6 +58,10 @@ typedef struct _WorkerInfo
 	struct _WorkerInfo *NextWorker;
 } WorkerInfo;
 
+typedef struct _AlgoContext
+{
+	size_t Nonce;
+} AlgoContext;
 typedef struct _PoolInfo
 {
 	SOCKET sockfd;
@@ -1303,7 +1306,7 @@ typedef struct _MinerThreadInfo
 {
 	uint32_t ThreadID;
 	uint32_t TotalMinerThreads;
-	OCLPlatform *PlatformContext;
+	uint32_t PlatformContext;
 	AlgoContext AlgoCtx;
 } MinerThreadInfo;
 
@@ -1753,7 +1756,7 @@ int main(int argc, char **argv)
 	PoolInfo Pool = {0};
 	AlgoSettings Settings;
 	MinerThreadInfo *MThrInfo;
-	OCLPlatform PlatformContext;
+	//OCLPlatform PlatformContext;
 	int ret, poolsocket, PlatformIdx = 0;
 	pthread_t Stratum, ADLThread, BroadcastThread, *MinerWorker;
 	unsigned int tmp1, tmp2, tmp3, tmp4;
@@ -1770,9 +1773,9 @@ int main(int argc, char **argv)
 	
 	if(ParseConfigurationFile(argv[1], &Settings)) return(0);
 	
-#ifdef __aarch64__
 	cryptonight_hash_ctx = cryptonight_hash_aesni;
-#else
+
+#if 0
 	if (__get_cpuid_max(0, &tmp1) >= 1) {
 		__get_cpuid(1, &tmp1, &tmp2, &tmp3, &tmp4);
 		if (tmp3 & 0x2000000)
@@ -1942,6 +1945,7 @@ int main(int argc, char **argv)
 
 	free(GPUIdxList);
 	
+#if 0
 	for(int i = 0; i < numGPUs; ++i) PlatformContext.Devices[i].rawIntensity = Settings.GPUSettings[i].rawIntensity;
 	
 	// Check for zero was done when parsing config
@@ -1958,6 +1962,7 @@ int main(int argc, char **argv)
 		}
 	}
 	
+#endif
 	for(int ThrIdx = 0, GPUIdx = 0; ThrIdx < Settings.TotalThreads && GPUIdx < Settings.NumGPUs; ThrIdx += Settings.GPUSettings[GPUIdx].Threads, ++GPUIdx)
 	{
 		for(int x = 0; x < Settings.GPUSettings[GPUIdx].Threads; ++x)
